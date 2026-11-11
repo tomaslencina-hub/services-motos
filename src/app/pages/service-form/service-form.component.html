@@ -1,0 +1,92 @@
+@if (moto(); as m) {
+  <section class="pagina angosta">
+    <a class="volver" [routerLink]="['/motos', m.id]">← {{ m.patente }}</a>
+    <h1>{{ serviceId() ? 'Editar service' : 'Nuevo service' }}</h1>
+    <p class="sutil">
+      <span class="patente patente-chica">{{ m.patente }}</span>
+      {{ m.marca }} {{ m.modelo }} · {{ m.clienteNombre }}
+    </p>
+
+    <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()">
+      <div class="fila">
+        <label class="campo">
+          <span>Fecha *</span>
+          <input type="date" formControlName="fecha" />
+        </label>
+        <label class="campo">
+          <span>Kilometraje</span>
+          <input type="number" formControlName="kilometraje" min="0" placeholder="Ej: 15400" />
+          @if (ultimoKm()) {
+            <small class="sutil">Último registrado: {{ ultimoKm() }} km</small>
+          }
+        </label>
+      </div>
+
+      <label class="campo">
+        <span>Trabajos realizados *</span>
+        <textarea formControlName="trabajos" rows="5" placeholder="Un trabajo por línea"></textarea>
+        @if (invalido('trabajos')) {
+          <small class="error">Describí qué se le hizo a la moto.</small>
+        }
+      </label>
+      <div class="chips chips-trabajos">
+        @for (t of trabajosFrecuentes; track t) {
+          <button type="button" class="chip" (click)="agregarTrabajo(t)">+ {{ t }}</button>
+        }
+      </div>
+
+      <label class="campo">
+        <span>Repuestos usados</span>
+        <textarea formControlName="repuestos" rows="3" placeholder="Ej: Aceite Motul 10W40 1L, filtro de aceite…"></textarea>
+      </label>
+
+      <div class="fila">
+        <label class="campo">
+          <span>Mano de obra ($)</span>
+          <input type="number" formControlName="manoDeObra" min="0" />
+        </label>
+        <label class="campo">
+          <span>Repuestos ($)</span>
+          <input type="number" formControlName="costoRepuestos" min="0" />
+        </label>
+        <div class="campo total">
+          <span>Total</span>
+          <strong>{{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <label class="campo">
+        <span>Mecánico</span>
+        <input formControlName="mecanico" placeholder="Quién hizo el trabajo" />
+      </label>
+
+      <h2>Próximo service</h2>
+      <div class="fila">
+        <label class="campo">
+          <span>A los (km)</span>
+          <input type="number" formControlName="proximoServiceKm" min="0" />
+        </label>
+        <label class="campo">
+          <span>Fecha estimada</span>
+          <input type="date" formControlName="proximoServiceFecha" />
+        </label>
+      </div>
+
+      <label class="campo">
+        <span>Observaciones</span>
+        <textarea formControlName="observaciones" rows="3" placeholder="Cosas para revisar la próxima vez, recomendaciones al cliente…"></textarea>
+      </label>
+
+      @if (error()) {
+        <div class="aviso aviso-error">{{ error() }}</div>
+      }
+
+      <div class="acciones">
+        <a class="btn" [routerLink]="['/motos', m.id]">Cancelar</a>
+        <button class="btn btn-primario" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar service' }}
+        </button>
+      </div>
+    </form>
+  </section>
+}

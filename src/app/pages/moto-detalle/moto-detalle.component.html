@@ -1,0 +1,130 @@
+@if (moto(); as m) {
+  <section class="pagina">
+    <a class="volver" routerLink="/">← Historial</a>
+
+    <div class="tarjeta ficha">
+      <div class="ficha-principal">
+        <div class="patente patente-grande">{{ m.patente }}</div>
+        <div>
+          <h1>
+            {{ m.marca }} {{ m.modelo }}
+            @if (m.anio) {
+              <span class="sutil">({{ m.anio }})</span>
+            }
+          </h1>
+          <p>
+            <strong>{{ m.clienteNombre }}</strong>
+            @if (m.clienteTelefono) {
+              · {{ m.clienteTelefono }}
+              · <a [href]="linkWhatsapp(m.clienteTelefono)" target="_blank" rel="noopener">WhatsApp</a>
+            }
+            @if (m.color) {
+              · {{ m.color }}
+            }
+          </p>
+          @if (m.notas) {
+            <p class="sutil pre">{{ m.notas }}</p>
+          }
+        </div>
+      </div>
+      <div class="ficha-acciones">
+        <a class="btn" [routerLink]="['/motos', m.id, 'editar']">Editar</a>
+        <button type="button" class="btn btn-peligro" (click)="eliminarMoto()">Eliminar</button>
+      </div>
+    </div>
+
+    <div class="resumen">
+      <div class="dato">
+        <span class="sutil">Services</span>
+        <strong>{{ services().length }}</strong>
+      </div>
+      <div class="dato">
+        <span class="sutil">Último km</span>
+        <strong>{{ ultimoKm() ? (ultimoKm() | number) + ' km' : '—' }}</strong>
+      </div>
+      <div class="dato">
+        <span class="sutil">Total facturado</span>
+        <strong>{{ totalGastado() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
+      </div>
+      @if (proximo(); as p) {
+        <div class="dato dato-destacado">
+          <span class="sutil">Próximo service</span>
+          <strong>
+            @if (p.proximoServiceKm) {
+              {{ p.proximoServiceKm | number }} km
+            }
+            @if (p.proximoServiceKm && p.proximoServiceFecha) {
+              ·
+            }
+            @if (p.proximoServiceFecha) {
+              {{ p.proximoServiceFecha | date: 'dd/MM/yyyy' }}
+            }
+          </strong>
+        </div>
+      }
+    </div>
+
+    <div class="encabezado">
+      <h2>Historial de services</h2>
+      <a class="btn btn-primario" [routerLink]="['/motos', m.id, 'services', 'nuevo']">+ Nuevo service</a>
+    </div>
+
+    <ol class="linea-tiempo">
+      @for (s of services(); track s.id) {
+        <li class="tarjeta service">
+          <div class="service-cabecera">
+            <div>
+              <strong class="fecha">{{ s.fecha | date: 'dd/MM/yyyy' }}</strong>
+              @if (s.kilometraje) {
+                <span class="badge">{{ s.kilometraje | number }} km</span>
+              }
+              @if (s.mecanico) {
+                <span class="sutil">· {{ s.mecanico }}</span>
+              }
+            </div>
+            <div class="service-acciones">
+              <a class="btn btn-chico" [routerLink]="['/motos', m.id, 'services', s.id]">Editar</a>
+              <button type="button" class="btn btn-chico btn-peligro" (click)="eliminarService(s)">Eliminar</button>
+            </div>
+          </div>
+
+          <div class="service-cuerpo">
+            <div>
+              <h3>Trabajos realizados</h3>
+              <p class="pre">{{ s.trabajos }}</p>
+            </div>
+            @if (s.repuestos) {
+              <div>
+                <h3>Repuestos</h3>
+                <p class="pre">{{ s.repuestos }}</p>
+              </div>
+            }
+            @if (s.observaciones) {
+              <div>
+                <h3>Observaciones</h3>
+                <p class="pre">{{ s.observaciones }}</p>
+              </div>
+            }
+          </div>
+
+          @if (totalService(s) > 0) {
+            <div class="service-costos">
+              @if (s.manoDeObra) {
+                <span>Mano de obra: {{ s.manoDeObra | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+              }
+              @if (s.costoRepuestos) {
+                <span>Repuestos: {{ s.costoRepuestos | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+              }
+              <strong>Total: {{ totalService(s) | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
+            </div>
+          }
+        </li>
+      } @empty {
+        <li class="vacio">
+          <p>Esta moto todavía no tiene services cargados.</p>
+          <a class="btn btn-primario" [routerLink]="['/motos', m.id, 'services', 'nuevo']">Cargar el primero</a>
+        </li>
+      }
+    </ol>
+  </section>
+}

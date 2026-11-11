@@ -1,0 +1,89 @@
+<section class="pagina">
+  <div class="encabezado">
+    <div>
+      <h1>Historial de services</h1>
+      <p class="sutil">Buscá por patente, nombre del cliente o modelo de moto.</p>
+    </div>
+    <a class="btn btn-primario" routerLink="/motos/nueva">+ Nueva moto</a>
+  </div>
+
+  @if (mostrarAvisoRespaldo()) {
+    <div class="aviso">
+      @if (diasSinRespaldo() === null) {
+        Todavía no hiciste ningún respaldo de los datos.
+      } @else {
+        Hace {{ diasSinRespaldo() }} días que no hacés un respaldo.
+      }
+      <a routerLink="/respaldo">Hacer respaldo ahora</a>
+    </div>
+  }
+
+  <div class="buscador">
+    <input
+      type="search"
+      placeholder="Ej: A123BCD, Juan Pérez, Honda Wave…"
+      [value]="busqueda()"
+      (input)="onBuscar($event)"
+      (keydown.enter)="abrirPrimera()"
+      autofocus
+    />
+    <div class="chips">
+      @for (c of campos; track c.valor) {
+        <button type="button" class="chip" [class.activo]="campo() === c.valor" (click)="campo.set(c.valor)">
+          {{ c.etiqueta }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <p class="sutil">Cargando…</p>
+  } @else if (motos().length === 0) {
+    <div class="vacio">
+      <p>Todavía no hay motos cargadas.</p>
+      <a class="btn btn-primario" routerLink="/motos/nueva">Cargar la primera moto</a>
+    </div>
+  } @else {
+    <p class="sutil contador">{{ filtradas().length }} de {{ motos().length }} motos</p>
+
+    @if (patenteSugerida(); as p) {
+      <div class="aviso aviso-info">
+        No hay ninguna moto con la patente <strong>{{ p }}</strong>.
+        <a [routerLink]="['/motos/nueva']" [queryParams]="{ patente: p }">Cargarla ahora</a>
+      </div>
+    }
+
+    <div class="grilla">
+      @for (m of filtradas(); track m.id) {
+        <a class="tarjeta tarjeta-moto" [routerLink]="['/motos', m.id]">
+          <div class="patente">{{ m.patente }}</div>
+          <div class="titulo-moto">
+            {{ m.marca }} {{ m.modelo }}
+            @if (m.anio) {
+              <span class="sutil">({{ m.anio }})</span>
+            }
+          </div>
+          <div class="cliente">
+            {{ m.clienteNombre }}
+            @if (m.clienteTelefono) {
+              <span class="sutil">· {{ m.clienteTelefono }}</span>
+            }
+          </div>
+          <div class="pie-tarjeta">
+            @if (m.ultimoService; as u) {
+              <span>Último: {{ u.fecha | date: 'dd/MM/yyyy' }}</span>
+              @if (u.kilometraje) {
+                <span>{{ u.kilometraje | number }} km</span>
+              }
+            } @else {
+              <span class="sutil">Sin services</span>
+            }
+            <span class="badge">{{ m.cantidadServices }} {{ m.cantidadServices === 1 ? 'service' : 'services' }}</span>
+          </div>
+        </a>
+      } @empty {
+        <p class="sutil">No hay resultados para "{{ busqueda() }}".</p>
+      }
+    </div>
+  }
+</section>

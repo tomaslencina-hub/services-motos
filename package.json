@@ -1,0 +1,63 @@
+{
+  "name": "services-motos",
+  "version": "1.0.0",
+  "description": "Historial de services para taller de motos",
+  "author": "Tomás Lencina",
+  "private": true,
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "ng serve",
+    "build": "ng build",
+    "electron": "ng build && electron .",
+    "electron:dev": "electron . --dev",
+    "dist:win": "ng build && electron-builder --win",
+    "android:init": "ng build && npx cap add android",
+    "android:sync": "ng build && npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/share": "^7.0.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.0.0",
+    "@angular/cli": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/compiler": "^20.0.0",
+    "@angular/compiler-cli": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/forms": "^20.0.0",
+    "@angular/platform-browser": "^20.0.0",
+    "@angular/router": "^20.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "dexie": "^4.0.0",
+    "electron": "^36.0.0",
+    "electron-builder": "^26.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.8.0",
+    "typescript": "~5.8.0"
+  },
+  "build": {
+    "appId": "com.servicesmotos.app",
+    "productName": "Services Motos",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/services-motos/browser/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Services Motos"
+    }
+  }
+}

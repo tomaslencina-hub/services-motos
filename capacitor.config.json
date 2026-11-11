@@ -1,0 +1,5 @@
+{
+  "appId": "com.servicesmotos.app",
+  "appName": "Services Motos",
+  "webDir": "dist/services-motos/browser"
+}

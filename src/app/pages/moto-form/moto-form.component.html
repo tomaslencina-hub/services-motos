@@ -1,0 +1,93 @@
+<section class="pagina angosta">
+  <a class="volver" [routerLink]="motoId() ? ['/motos', motoId()] : ['/']">← Volver</a>
+  <h1>{{ motoId() ? 'Editar moto' : 'Nueva moto' }}</h1>
+
+  <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()">
+    <h2>Moto</h2>
+    <div class="fila">
+      <label class="campo">
+        <span>Patente *</span>
+        <input formControlName="patente" placeholder="A123BCD" class="input-patente" (blur)="normalizarCampoPatente()" />
+        @if (invalido('patente')) {
+          <small class="error">Ingresá la patente.</small>
+        }
+      </label>
+      <label class="campo">
+        <span>Año</span>
+        <input type="number" formControlName="anio" placeholder="2020" min="1950" [max]="anioMax" />
+        @if (invalido('anio')) {
+          <small class="error">Año entre 1950 y {{ anioMax }}.</small>
+        }
+      </label>
+    </div>
+
+    <div class="fila">
+      <label class="campo">
+        <span>Marca *</span>
+        <input formControlName="marca" placeholder="Honda, Yamaha, Motomel…" list="marcas" />
+        <datalist id="marcas">
+          <option value="Honda"></option>
+          <option value="Yamaha"></option>
+          <option value="Motomel"></option>
+          <option value="Gilera"></option>
+          <option value="Corven"></option>
+          <option value="Zanella"></option>
+          <option value="Keller"></option>
+          <option value="Mondial"></option>
+          <option value="Bajaj"></option>
+          <option value="Suzuki"></option>
+          <option value="Kawasaki"></option>
+          <option value="Benelli"></option>
+          <option value="KTM"></option>
+          <option value="Royal Enfield"></option>
+        </datalist>
+        @if (invalido('marca')) {
+          <small class="error">Ingresá la marca.</small>
+        }
+      </label>
+      <label class="campo">
+        <span>Modelo *</span>
+        <input formControlName="modelo" placeholder="Wave 110, YBR 125…" />
+        @if (invalido('modelo')) {
+          <small class="error">Ingresá el modelo.</small>
+        }
+      </label>
+    </div>
+
+    <label class="campo">
+      <span>Color</span>
+      <input formControlName="color" />
+    </label>
+
+    <h2>Cliente</h2>
+    <div class="fila">
+      <label class="campo">
+        <span>Nombre *</span>
+        <input formControlName="clienteNombre" placeholder="Nombre y apellido" />
+        @if (invalido('clienteNombre')) {
+          <small class="error">Ingresá el nombre del cliente.</small>
+        }
+      </label>
+      <label class="campo">
+        <span>Teléfono</span>
+        <input type="tel" formControlName="clienteTelefono" placeholder="11 2345-6789" />
+      </label>
+    </div>
+
+    <label class="campo">
+      <span>Notas</span>
+      <textarea formControlName="notas" rows="3" placeholder="Datos útiles de la moto o del cliente"></textarea>
+    </label>
+
+    @if (error()) {
+      <div class="aviso aviso-error">{{ error() }}</div>
+    }
+
+    <div class="acciones">
+      <a class="btn" [routerLink]="motoId() ? ['/motos', motoId()] : ['/']">Cancelar</a>
+      <button class="btn btn-primario" type="submit" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</section>

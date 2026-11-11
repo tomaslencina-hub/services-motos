@@ -1,0 +1,62 @@
+<section class="pagina angosta">
+  <h1>Respaldo de datos</h1>
+  <p class="sutil">
+    Los datos se guardan solo en este equipo. Si se rompe la PC o se borra la app, se pierden:
+    hacé un respaldo al menos una vez por semana y guardalo fuera del equipo.
+  </p>
+
+  <div class="resumen">
+    <div class="dato">
+      <span class="sutil">Motos</span>
+      <strong>{{ cantMotos() }}</strong>
+    </div>
+    <div class="dato">
+      <span class="sutil">Services</span>
+      <strong>{{ cantServices() }}</strong>
+    </div>
+    <div class="dato">
+      <span class="sutil">Último respaldo</span>
+      <strong>{{ ultimo() ? (ultimo() | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}</strong>
+    </div>
+  </div>
+
+  @if (mensaje(); as msg) {
+    <div class="aviso" [class.aviso-error]="msg.tipo === 'error'" [class.aviso-ok]="msg.tipo === 'ok'">
+      {{ msg.texto }}
+    </div>
+  }
+
+  <div class="tarjeta bloque">
+    <h2>Exportar</h2>
+    <div class="acciones acciones-izq">
+      <button type="button" class="btn btn-primario" (click)="exportarJson()" [disabled]="trabajando()">
+        Descargar respaldo (.json)
+      </button>
+      <button type="button" class="btn" (click)="exportarCsv()" [disabled]="trabajando()">
+        Exportar a Excel (.csv)
+      </button>
+    </div>
+    <p class="sutil">
+      El <strong>.json</strong> sirve para restaurar o pasar los datos a otro equipo (por ejemplo, de la PC al celular).
+      El <strong>.csv</strong> es para ver o imprimir el historial en Excel.
+    </p>
+  </div>
+
+  <div class="tarjeta bloque">
+    <h2>Importar respaldo</h2>
+    <div class="opciones">
+      <label>
+        <input type="radio" name="modo" [checked]="modo() === 'combinar'" (change)="modo.set('combinar')" />
+        <span><strong>Combinar</strong>: agrega lo que no exista (las motos se emparejan por patente).</span>
+      </label>
+      <label>
+        <input type="radio" name="modo" [checked]="modo() === 'reemplazar'" (change)="modo.set('reemplazar')" />
+        <span><strong>Reemplazar todo</strong>: borra los datos actuales y deja solo los del archivo.</span>
+      </label>
+    </div>
+    <label class="btn btn-archivo" [class.deshabilitado]="trabajando()">
+      Elegir archivo .json
+      <input type="file" accept="application/json,.json" (change)="importar($event)" [disabled]="trabajando()" />
+    </label>
+  </div>
+</section>

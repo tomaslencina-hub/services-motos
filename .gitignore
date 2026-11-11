@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out-tsc/
+release/
+.angular/
+android/app/build/
+android/.gradle/
+android/build/
+*.log
+.DS_Store
