@@ -27,7 +27,6 @@ jobs:
       - run: npm ci
 
       # Ej: package.json 1.0.0 -> 1.0.1-dev.7 (el 7 es el número de ejecución). No se commitea.
-      # Se publica como pre-release para que la app del taller no la tome.
       - name: Marcar como versión de prueba
         shell: bash
         run: |
@@ -36,13 +35,22 @@ jobs:
             const p = require('./package.json');
             const [a, b, c] = p.version.split('-')[0].split('.').map(Number);
             p.version = a + '.' + b + '.' + (c + 1) + '-dev.${{ github.run_number }}';
-            p.build.publish[0].releaseType = 'prerelease';
+            p.build.publish[0].releaseType = 'draft';
             fs.writeFileSync('package.json', JSON.stringify(p, null, 2));
+            fs.appendFileSync(process.env.GITHUB_ENV, 'VERSION=' + p.version + require('os').EOL);
             console.log('Versión de prueba:', p.version);
           "
 
       - run: npx ng build
 
+      # electron-builder sube todo a un borrador: si publicara directo, las subidas en paralelo
+      # (instalador y .blockmap) chocan al crear la versión en GitHub.
       - run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Recién con todo subido se publica como pre-release: la app del taller no la toma.
+      - name: Publicar como versión de prueba
+        run: gh release edit "v$env:VERSION" --draft=false --prerelease --target "$env:GITHUB_SHA"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
