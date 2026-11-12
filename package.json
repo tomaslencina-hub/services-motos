@@ -8,9 +8,11 @@
   "scripts": {
     "start": "ng serve",
     "build": "ng build",
+    "dev": "concurrently -k -n angular,electron \"ng serve\" \"wait-on tcp:4200 && electron . --dev\"",
     "electron": "ng build && electron .",
     "electron:dev": "electron . --dev",
     "dist:win": "ng build && electron-builder --win",
+    "release:win": "ng build && electron-builder --win --publish always",
     "android:init": "ng build && npx cap add android",
     "android:sync": "ng build && npx cap sync android",
     "android:open": "npx cap open android"
@@ -19,7 +21,8 @@
     "@capacitor/android": "^7.0.0",
     "@capacitor/core": "^7.0.0",
     "@capacitor/filesystem": "^7.0.0",
-    "@capacitor/share": "^7.0.0"
+    "@capacitor/share": "^7.0.0",
+    "electron-updater": "^6.8.11"
   },
   "devDependencies": {
     "@angular/build": "^20.0.0",
@@ -32,12 +35,14 @@
     "@angular/platform-browser": "^20.0.0",
     "@angular/router": "^20.0.0",
     "@capacitor/cli": "^7.0.0",
+    "concurrently": "^9.2.5",
     "dexie": "^4.0.0",
     "electron": "^36.0.0",
     "electron-builder": "^26.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.8.0",
-    "typescript": "~5.8.0"
+    "typescript": "~5.8.0",
+    "wait-on": "^8.0.5"
   },
   "build": {
     "appId": "com.servicesmotos.app",
@@ -51,13 +56,22 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "Services Motos"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "tomaslencina-hub",
+        "repo": "services-motos",
+        "releaseType": "release"
+      }
+    ]
   }
 }

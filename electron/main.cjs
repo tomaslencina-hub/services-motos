@@ -1,11 +1,13 @@
 // Proceso principal de Electron: abre la app Angular compilada en una ventana de escritorio.
-const { app, BrowserWindow, protocol, net, shell } = require('electron');
+const { app, BrowserWindow, protocol, net, shell, ipcMain } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
+const { autoUpdater } = require('electron-updater');
 
 const MODO_DEV = process.argv.includes('--dev');
 const DIST = path.join(__dirname, '..', 'dist', 'services-motos', 'browser');
+const CADA_4_HORAS = 4 * 60 * 60 * 1000;
 
 // Protocolo propio "app://" en lugar de file:// para que los módulos JS
 // y la base de datos local (IndexedDB) funcionen con un origen estable.
@@ -26,14 +28,25 @@ function crearVentana() {
     height: 820,
     minWidth: 900,
     minHeight: 600,
+    show: false,
+    // Sin la barra de Windows: minimizar y cerrar están dentro de la app.
+    frame: false,
     title: 'Services Motos',
     autoHideMenuBar: true,
-    backgroundColor: '#f4f5f7',
+    backgroundColor: '#0b0f15',
     webPreferences: {
       contextIsolation: true,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
+
+  // Siempre en pantalla completa: no hay botón de maximizar, así que no se deja achicar.
+  ventana.once('ready-to-show', () => {
+    ventana.maximize();
+    ventana.show();
+  });
+  ventana.on('unmaximize', () => ventana.maximize());
 
   // Los links externos se abren en el navegador, no dentro de la app.
   ventana.webContents.setWindowOpenHandler(({ url }) => {
@@ -56,6 +69,24 @@ app.on('second-instance', () => {
   }
 });
 
+ipcMain.on('ventana:minimizar', (evento) => BrowserWindow.fromWebContents(evento.sender)?.minimize());
+ipcMain.on('ventana:cerrar', (evento) => BrowserWindow.fromWebContents(evento.sender)?.close());
+ipcMain.on('actualizacion:instalar', () => autoUpdater.quitAndInstall());
+
+// Actualizaciones desde GitHub Releases: se descargan solas en segundo plano.
+// Si el usuario no toca "Reiniciar y actualizar", se instalan al cerrar la app.
+function buscarActualizaciones() {
+  autoUpdater.on('update-downloaded', ({ version }) => {
+    ventana?.webContents.send('actualizacion:lista', version);
+  });
+  autoUpdater.on('error', (error) => console.error('Error al buscar actualizaciones:', error));
+
+  const buscar = () => autoUpdater.checkForUpdates().catch(() => {});
+  buscar();
+  // La app suele quedar abierta todo el día en el taller.
+  setInterval(buscar, CADA_4_HORAS);
+}
+
 app.whenReady().then(() => {
   protocol.handle('app', (request) => {
     const { pathname } = new URL(request.url);
@@ -71,6 +102,11 @@ app.whenReady().then(() => {
   });
 
   crearVentana();
+
+  // Solo en el .exe instalado: con "npm run dev" no hay nada que actualizar.
+  if (app.isPackaged) {
+    buscarActualizaciones();
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) crearVentana();
