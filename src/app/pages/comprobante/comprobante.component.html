@@ -1,0 +1,194 @@
+@if (datos(); as d) {
+  <section class="pagina angosta">
+    <a class="volver" [routerLink]="['/motos', d.moto.id]">← {{ d.moto.patente }}</a>
+    <div class="encabezado">
+      <div>
+        <h1>Comprobante N° {{ numero() }}</h1>
+        <p class="sutil">Revisalo antes de mandarlo. Para corregir algo, editá el service.</p>
+      </div>
+      <div class="acciones-comprobante">
+        <a class="btn" [routerLink]="['/motos', d.moto.id, 'services', d.service.id]">Editar service</a>
+        <button type="button" class="btn" (click)="abrirPdf()" [disabled]="trabajando()">
+          {{ trabajando() === 'pdf' ? 'Generando…' : esCelular ? 'Compartir PDF' : 'Abrir PDF' }}
+        </button>
+        <button type="button" class="btn btn-whatsapp" (click)="enviarPorWhatsapp()" [disabled]="trabajando()">
+          {{ trabajando() === 'whatsapp' ? 'Abriendo WhatsApp…' : 'Enviar por WhatsApp' }}
+        </button>
+      </div>
+    </div>
+
+    @if (error()) {
+      <div class="aviso aviso-error">{{ error() }}</div>
+    }
+    @switch (resultadoEnvio()) {
+      @case ('pegado') {
+        <div class="aviso aviso-ok">
+          <span>El PDF ya está adjuntado en el chat de WhatsApp. Revisalo y tocá <strong>Enter</strong> para enviarlo.</span>
+        </div>
+      }
+      @case ('portapapeles') {
+        <div class="aviso aviso-ok">
+          <span>El PDF ya está copiado. En el chat de WhatsApp tocá <strong>Ctrl+V</strong> y después <strong>Enter</strong> para enviarlo.</span>
+        </div>
+      }
+      @case ('carpeta') {
+        <div class="aviso">Se abrió la carpeta con el PDF: arrastralo al chat de WhatsApp.</div>
+      }
+      @case ('descargado') {
+        <div class="aviso">Se descargó el PDF: adjuntalo en el chat de WhatsApp.</div>
+      }
+    }
+    @if (tallerIncompleto()) {
+      <div class="aviso aviso-info">
+        El comprobante todavía no tiene la dirección ni el teléfono del taller.
+        <a routerLink="/taller">Completar datos del taller</a>
+      </div>
+    }
+    @if (sinPrecios()) {
+      <div class="aviso">
+        Hay ítems sin precio: salen con "—" en el comprobante.
+        <a [routerLink]="['/motos', d.moto.id, 'services', d.service.id]">Cargar precios</a>
+      </div>
+    }
+    @if (!esCelular) {
+      <p class="sutil ayuda-whatsapp">
+        Al tocar <strong>Enviar por WhatsApp</strong> se abre el chat del cliente con el mensaje listo y el PDF se
+        adjunta solo. Si no aparece, tocá <strong>Ctrl+V</strong> en el chat.
+      </p>
+    }
+
+    <article class="hoja">
+      <header class="hoja-encabezado">
+        <div>
+          <img src="logo.png" alt="" class="hoja-logo" />
+          <strong class="hoja-taller">{{ d.taller.nombre }}</strong>
+          @if (d.taller.direccion) {
+            <span>{{ d.taller.direccion }}</span>
+          }
+          @if (d.taller.telefono) {
+            <span>Tel: {{ d.taller.telefono }}</span>
+          }
+          @if (d.taller.cuit) {
+            <span>CUIT: {{ d.taller.cuit }}</span>
+          }
+          @if (d.taller.email) {
+            <span>{{ d.taller.email }}</span>
+          }
+        </div>
+        <div class="hoja-numero">
+          <strong class="hoja-titulo">COMPROBANTE DE SERVICE</strong>
+          <strong>N° {{ numero() }}</strong>
+          <span>Fecha: {{ d.service.fecha | date: 'dd/MM/yyyy' }}</span>
+          <small>Documento no válido como factura</small>
+        </div>
+      </header>
+
+      <div class="hoja-datos">
+        <div>
+          <h3>Cliente</h3>
+          <p>{{ d.moto.clienteNombre }}</p>
+          @if (d.moto.clienteTelefono) {
+            <p>Tel: {{ d.moto.clienteTelefono }}</p>
+          }
+        </div>
+        <div>
+          <h3>Moto</h3>
+          <p>
+            {{ d.moto.marca }} {{ d.moto.modelo }}
+            @if (d.moto.anio) {
+              ({{ d.moto.anio }})
+            }
+            · Patente {{ d.moto.patente }}
+          </p>
+          @if (d.service.kilometraje) {
+            <p>Kilometraje: {{ d.service.kilometraje | number }} km</p>
+          }
+        </div>
+      </div>
+
+      <div class="hoja-tabla-contenedor">
+        <table class="hoja-tabla">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th class="centro">Cant.</th>
+              <th class="derecha">Precio unit.</th>
+              <th class="derecha">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (trabajos().length) {
+              <tr class="hoja-grupo"><td colspan="4">Trabajos (mano de obra)</td></tr>
+              @for (i of trabajos(); track $index) {
+                <tr>
+                  <td>{{ i.descripcion }}</td>
+                  <td class="centro">{{ i.cantidad }}</td>
+                  <td class="derecha">{{ i.precioUnitario === null ? '—' : (i.precioUnitario | currency: 'ARS' : 'symbol-narrow' : '1.0-0') }}</td>
+                  <td class="derecha">{{ i.precioUnitario === null ? '—' : (subtotalItem(i) | currency: 'ARS' : 'symbol-narrow' : '1.0-0') }}</td>
+                </tr>
+              }
+            }
+            @if (repuestos().length) {
+              <tr class="hoja-grupo"><td colspan="4">Repuestos</td></tr>
+              @for (i of repuestos(); track $index) {
+                <tr>
+                  <td>{{ i.descripcion }}</td>
+                  <td class="centro">{{ i.cantidad }}</td>
+                  <td class="derecha">{{ i.precioUnitario === null ? '—' : (i.precioUnitario | currency: 'ARS' : 'symbol-narrow' : '1.0-0') }}</td>
+                  <td class="derecha">{{ i.precioUnitario === null ? '—' : (subtotalItem(i) | currency: 'ARS' : 'symbol-narrow' : '1.0-0') }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="hoja-totales">
+        @if (trabajos().length && repuestos().length) {
+          <span>Mano de obra</span><span>{{ totalTrabajos() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+          <span>Repuestos</span><span>{{ totalRepuestos() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+        }
+        <strong class="hoja-total">
+          <span>TOTAL</span><span>{{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+        </strong>
+      </div>
+
+      @if (d.service.observaciones.trim()) {
+        <div class="hoja-bloque">
+          <h3>Observaciones</h3>
+          <p class="pre">{{ d.service.observaciones.trim() }}</p>
+        </div>
+      }
+      @if (d.service.proximoServiceKm || d.service.proximoServiceFecha) {
+        <div class="hoja-bloque">
+          <h3>Próximo service</h3>
+          <p>
+            Recomendamos el próximo service
+            @if (d.service.proximoServiceKm) {
+              a los {{ d.service.proximoServiceKm | number }} km
+            }
+            @if (d.service.proximoServiceKm && d.service.proximoServiceFecha) {
+              o
+            }
+            @if (d.service.proximoServiceFecha) {
+              el {{ d.service.proximoServiceFecha | date: 'dd/MM/yyyy' }}
+            }.
+          </p>
+        </div>
+      }
+      @if (d.service.mecanico.trim()) {
+        <div class="hoja-bloque">
+          <h3>Atendido por</h3>
+          <p>{{ d.service.mecanico }}</p>
+        </div>
+      }
+
+      <footer class="hoja-pie">
+        @if (d.taller.notaPie.trim()) {
+          <p class="pre">{{ d.taller.notaPie.trim() }}</p>
+        }
+        <p>Documento no válido como factura</p>
+      </footer>
+    </article>
+  </section>
+}

@@ -1,0 +1,57 @@
+<section class="pagina angosta">
+  <h1>Datos del taller</h1>
+  <p class="sutil">Salen en el encabezado y al pie de cada comprobante.</p>
+
+  <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()">
+    <label class="campo">
+      <span>Nombre *</span>
+      <input formControlName="nombre" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+        <small class="error">Ingresá el nombre del taller.</small>
+      }
+    </label>
+
+    <div class="fila">
+      <label class="campo">
+        <span>Dirección</span>
+        <input formControlName="direccion" placeholder="Calle 123, Localidad" />
+      </label>
+      <label class="campo">
+        <span>Teléfono / WhatsApp</span>
+        <input type="tel" formControlName="telefono" placeholder="11 2345-6789" />
+      </label>
+    </div>
+
+    <div class="fila">
+      <label class="campo">
+        <span>CUIT</span>
+        <input formControlName="cuit" placeholder="20-12345678-9" />
+      </label>
+      <label class="campo">
+        <span>Email o Instagram</span>
+        <input formControlName="email" placeholder="@pachimotosport" />
+      </label>
+    </div>
+
+    <label class="campo">
+      <span>Nota al pie</span>
+      <textarea
+        formControlName="notaPie"
+        rows="3"
+        placeholder="Ej: Garantía de 30 días sobre la mano de obra. Aceptamos efectivo y transferencia."
+      ></textarea>
+    </label>
+
+    @if (mensaje(); as msg) {
+      <div class="aviso" [class.aviso-error]="msg.tipo === 'error'" [class.aviso-ok]="msg.tipo === 'ok'">
+        {{ msg.texto }}
+      </div>
+    }
+
+    <div class="acciones">
+      <button class="btn btn-primario" type="submit" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</section>

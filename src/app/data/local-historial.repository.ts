@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import Dexie, { type Table } from 'dexie';
 import {
+  DatosTaller,
   ModoImportacion,
   Moto,
   MotoConResumen,
   RegistroService,
   RespaldoHistorial,
+  TALLER_POR_DEFECTO,
 } from '../models/historial.models';
 import { normalizarPatente } from '../utils/texto';
 import { HistorialRepository } from './historial.repository';
@@ -14,6 +16,8 @@ import { HistorialRepository } from './historial.repository';
 class HistorialDB extends Dexie {
   motos!: Table<Moto, number>;
   services!: Table<RegistroService, number>;
+  /** Configuración suelta (clave → valor), por ahora solo los datos del taller. */
+  ajustes!: Table<{ clave: string; valor: unknown }, string>;
 
   constructor() {
     super('services-motos');
@@ -21,8 +25,13 @@ class HistorialDB extends Dexie {
       motos: '++id, &patente, clienteNombre, marca, modelo',
       services: '++id, motoId, fecha',
     });
+    this.version(2).stores({
+      ajustes: 'clave',
+    });
   }
 }
+
+const CLAVE_TALLER = 'taller';
 
 function ordenarServices(a: RegistroService, b: RegistroService): number {
   return b.fecha.localeCompare(a.fecha) || b.creadoEn.localeCompare(a.creadoEn);
@@ -118,6 +127,29 @@ export class LocalHistorialRepository implements HistorialRepository {
     await this.db.services.delete(id);
   }
 
+  async numeroComprobante(serviceId: number): Promise<number> {
+    return this.db.transaction('rw', this.db.services, async () => {
+      const service = await this.db.services.get(serviceId);
+      if (!service) throw new Error('El service no existe.');
+      if (service.numeroComprobante) return service.numeroComprobante;
+
+      let ultimo = 0;
+      await this.db.services.each((s) => (ultimo = Math.max(ultimo, s.numeroComprobante ?? 0)));
+      const numero = ultimo + 1;
+      await this.db.services.update(serviceId, { numeroComprobante: numero });
+      return numero;
+    });
+  }
+
+  async obtenerDatosTaller(): Promise<DatosTaller> {
+    const fila = await this.db.ajustes.get(CLAVE_TALLER);
+    return { ...TALLER_POR_DEFECTO, ...(fila?.valor as Partial<DatosTaller> | undefined) };
+  }
+
+  async guardarDatosTaller(datos: DatosTaller): Promise<void> {
+    await this.db.ajustes.put({ clave: CLAVE_TALLER, valor: datos });
+  }
+
   async exportar(): Promise<RespaldoHistorial> {
     const [motos, services] = await Promise.all([this.db.motos.toArray(), this.db.services.toArray()]);
     return {
@@ -126,6 +158,7 @@ export class LocalHistorialRepository implements HistorialRepository {
       exportadoEn: new Date().toISOString(),
       motos,
       services,
+      taller: await this.obtenerDatosTaller(),
     };
   }
 
@@ -140,7 +173,12 @@ export class LocalHistorialRepository implements HistorialRepository {
     let motosImportadas = 0;
     let servicesImportados = 0;
 
-    await this.db.transaction('rw', this.db.motos, this.db.services, async () => {
+    await this.db.transaction('rw', this.db.motos, this.db.services, this.db.ajustes, async () => {
+      // Datos del taller: al reemplazar se toman los del archivo; al combinar, solo si acá no hay.
+      if (respaldo.taller && (modo === 'reemplazar' || !(await this.db.ajustes.get(CLAVE_TALLER)))) {
+        await this.db.ajustes.put({ clave: CLAVE_TALLER, valor: respaldo.taller });
+      }
+
       if (modo === 'reemplazar') {
         await this.db.services.clear();
         await this.db.motos.clear();
@@ -174,7 +212,8 @@ export class LocalHistorialRepository implements HistorialRepository {
           .filter((x) => x.fecha === s.fecha && x.trabajos.trim() === s.trabajos.trim())
           .first();
         if (!repetido) {
-          await this.db.services.add(sinId({ ...s, motoId }));
+          // El número de comprobante se descarta: en este equipo puede estar usado por otro service.
+          await this.db.services.add(sinId({ ...s, motoId, numeroComprobante: null }));
           servicesImportados++;
         }
       }

@@ -26,6 +26,12 @@ export const routes: Routes = [
       import('./pages/service-form/service-form.component').then((m) => m.ServiceFormComponent),
   },
   {
+    path: 'motos/:id/services/:serviceId/comprobante',
+    title: 'Comprobante | Services Motos',
+    loadComponent: () =>
+      import('./pages/comprobante/comprobante.component').then((m) => m.ComprobanteComponent),
+  },
+  {
     path: 'motos/:id/services/:serviceId',
     title: 'Editar service | Services Motos',
     loadComponent: () =>
@@ -42,6 +48,11 @@ export const routes: Routes = [
     title: 'Respaldo | Services Motos',
     loadComponent: () =>
       import('./pages/respaldo/respaldo.component').then((m) => m.RespaldoComponent),
+  },
+  {
+    path: 'taller',
+    title: 'Datos del taller | Services Motos',
+    loadComponent: () => import('./pages/taller/taller.component').then((m) => m.TallerComponent),
   },
   { path: '**', redirectTo: '' },
 ];

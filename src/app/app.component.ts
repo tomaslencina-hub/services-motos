@@ -32,6 +32,10 @@ interface VentanaApp {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
             <span>Respaldo</span>
           </a>
+          <a routerLink="/taller" routerLinkActive="activo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v10H4z" /><path d="M3 10l2-6h14l2 6" /><path d="M10 20v-5h4v5" /></svg>
+            <span>Taller</span>
+          </a>
         </nav>
         <p class="lateral-pie">Services Motos</p>
       </aside>

@@ -1,4 +1,5 @@
 import {
+  DatosTaller,
   ModoImportacion,
   Moto,
   MotoConResumen,
@@ -25,6 +26,11 @@ export abstract class HistorialRepository {
   abstract obtenerService(id: number): Promise<RegistroService | undefined>;
   abstract guardarService(service: RegistroService): Promise<number>;
   abstract eliminarService(id: number): Promise<void>;
+  /** Número de comprobante del service; si todavía no tiene, le asigna el siguiente libre. */
+  abstract numeroComprobante(serviceId: number): Promise<number>;
+
+  abstract obtenerDatosTaller(): Promise<DatosTaller>;
+  abstract guardarDatosTaller(datos: DatosTaller): Promise<void>;
 
   abstract exportar(): Promise<RespaldoHistorial>;
   abstract importar(

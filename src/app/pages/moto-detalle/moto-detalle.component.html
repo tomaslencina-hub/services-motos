@@ -83,6 +83,7 @@
               }
             </div>
             <div class="service-acciones">
+              <a class="btn btn-chico btn-comprobante" [routerLink]="['/motos', m.id, 'services', s.id, 'comprobante']">Comprobante</a>
               <a class="btn btn-chico" [routerLink]="['/motos', m.id, 'services', s.id]">Editar</a>
               <button type="button" class="btn btn-chico btn-peligro" (click)="eliminarService(s)">Eliminar</button>
             </div>

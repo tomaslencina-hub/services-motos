@@ -270,6 +270,75 @@ p { margin: 0.25rem 0; }
   border: 1px dashed var(--borde); border-radius: var(--radio); background: rgba(20, 27, 37, 0.5);
 }
 
+/* Detalle con precios en el formulario de service */
+.items { margin-bottom: 1.2rem; }
+.items-titulo { display: flex; align-items: baseline; gap: 0.7rem; border-bottom: 1px solid var(--borde); margin-bottom: 0.7rem; }
+.formulario .items-titulo h2 { border: 0; padding-bottom: 0.5rem; margin: 1.2rem 0 0; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) 72px 130px 110px 34px; gap: 0.5rem; align-items: center; margin-bottom: 0.45rem; }
+.item input {
+  font: inherit; padding: 0.55rem 0.7rem; border: 1px solid var(--borde); border-radius: 9px;
+  background: #0f151e; color: var(--texto); width: 100%; min-width: 0;
+}
+.item input:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+.item-cantidad { text-align: center; }
+.item-precio { text-align: right; }
+.item-subtotal { text-align: right; font-variant-numeric: tabular-nums; }
+.item-quitar {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid transparent; background: transparent;
+  color: var(--sutil); cursor: pointer; font-size: 0.9rem;
+}
+.item-quitar:hover { color: #ff8a8a; border-color: var(--peligro); background: var(--peligro-suave); }
+.item-encabezado { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--sutil); font-weight: 600; margin-bottom: 0.2rem; }
+.item-encabezado span:nth-child(2) { text-align: center; }
+.item-encabezado span:nth-child(3), .item-encabezado span:nth-child(4) { text-align: right; }
+.items-pie { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 0.6rem; font-size: 0.9rem; }
+.total-service {
+  display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0 1.4rem; padding: 0.9rem 1.1rem;
+  border-radius: 12px; background: var(--acento-suave); border: 1px solid rgba(59, 130, 246, 0.35);
+}
+.total-service span { font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.85rem; color: #bcd6ff; }
+.total-service strong { font-size: 1.6rem; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* Comprobante */
+.btn-comprobante { color: var(--acento-claro); }
+.btn-whatsapp { background: #1fa855; border-color: #1fa855; color: #fff; box-shadow: 0 6px 18px rgba(31, 168, 85, 0.3); }
+.btn-whatsapp:hover { background: #22b75d; border-color: #22b75d; }
+.acciones-comprobante { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.ayuda-whatsapp { font-size: 0.88rem; margin: -0.4rem 0 1.2rem; }
+
+/* La vista previa imita la hoja impresa: fondo blanco aunque la app sea oscura. */
+.hoja {
+  background: #fff; color: #191e26; border-radius: 6px; padding: 2.4rem 2.6rem 1.8rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); font-size: 0.92rem;
+}
+.hoja h3 { color: #6e7682; }
+.hoja-encabezado { display: flex; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 2px solid #1e4fb8; }
+.hoja-encabezado > div { display: flex; flex-direction: column; gap: 0.15rem; color: #6e7682; font-size: 0.85rem; }
+.hoja-logo { width: 190px; height: auto; margin-bottom: 0.5rem; }
+.hoja-taller { color: #191e26; font-size: 1.05rem; }
+.hoja-numero { align-items: flex-end; text-align: right; }
+.hoja-numero strong { color: #191e26; font-size: 1rem; }
+.hoja-numero .hoja-titulo { color: #1e4fb8; font-size: 1.25rem; letter-spacing: 0.02em; }
+.hoja-numero span { color: #191e26; }
+.hoja-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.2rem 0; }
+.hoja-tabla-contenedor { overflow-x: auto; }
+.hoja-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.hoja-tabla th { background: #1e4fb8; color: #fff; text-align: left; font-weight: 650; padding: 0.55rem 0.7rem; }
+.hoja-tabla td { padding: 0.5rem 0.7rem; border-bottom: 1px solid #e1e5ec; }
+.hoja-tabla .centro { text-align: center; }
+.hoja-tabla .derecha { text-align: right; white-space: nowrap; }
+.hoja-grupo td { background: #eef2fa; color: #1e4fb8; font-weight: 650; }
+.hoja-totales {
+  display: grid; grid-template-columns: auto auto; justify-content: end; column-gap: 2.5rem; row-gap: 0.3rem;
+  margin: 1.1rem 0 1.4rem; color: #6e7682; text-align: right; font-variant-numeric: tabular-nums;
+}
+.hoja-total {
+  grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 2.5rem; margin-top: 0.4rem;
+  background: #1e4fb8; color: #fff; padding: 0.6rem 0.9rem; border-radius: 6px; font-size: 1.1rem;
+}
+.hoja-bloque { margin-bottom: 0.9rem; }
+.hoja-pie { margin-top: 1.6rem; padding-top: 0.7rem; border-top: 1px solid #e1e5ec; color: #6e7682; font-size: 0.78rem; display: flex; flex-direction: column; gap: 0.2rem; }
+
 /* Celular (Android) */
 @media (max-width: 760px) {
   .lateral {
@@ -290,4 +359,11 @@ p { margin: 0.25rem 0; }
   .ficha { padding: 1.1rem; }
   .ficha-acciones, .acciones { width: 100%; }
   .acciones .btn { flex: 1; }
+  /* Descripción en su propia línea; cantidad, precio y quitar debajo. */
+  .item { grid-template-columns: 64px minmax(0, 1fr) 34px; padding-bottom: 0.6rem; border-bottom: 1px dashed var(--borde); margin-bottom: 0.6rem; }
+  .item-descripcion { grid-column: 1 / -1; }
+  .item-encabezado, .item-subtotal { display: none; }
+  .hoja { padding: 1.3rem 1.1rem; }
+  .acciones-comprobante { width: 100%; }
+  .acciones-comprobante .btn { flex: 1; }
 }

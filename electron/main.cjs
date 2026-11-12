@@ -3,6 +3,7 @@ const { app, BrowserWindow, protocol, net, shell, ipcMain } = require('electron'
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
+const { execFile } = require('node:child_process');
 const { autoUpdater } = require('electron-updater');
 
 const MODO_DEV = process.argv.includes('--dev');
@@ -14,6 +15,11 @@ const CADA_4_HORAS = 4 * 60 * 60 * 1000;
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
+
+// "npm run dev" usa su propia carpeta: así puede estar abierta junto con la app instalada.
+if (MODO_DEV) {
+  app.setPath('userData', path.join(app.getPath('appData'), 'services-motos-dev'));
+}
 
 // Una sola instancia abierta a la vez (evita dos ventanas escribiendo la misma base).
 if (!app.requestSingleInstanceLock()) {
@@ -72,6 +78,82 @@ app.on('second-instance', () => {
 ipcMain.on('ventana:minimizar', (evento) => BrowserWindow.fromWebContents(evento.sender)?.minimize());
 ipcMain.on('ventana:cerrar', (evento) => BrowserWindow.fromWebContents(evento.sender)?.close());
 ipcMain.on('actualizacion:instalar', () => autoUpdater.quitAndInstall());
+
+// Copia el PDF al portapapeles de Windows, como "Copiar" en el Explorador:
+// en el chat de WhatsApp alcanza con Ctrl+V para adjuntarlo.
+function copiarAlPortapapeles(archivo) {
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-Command', 'Set-Clipboard -LiteralPath $env:ARCHIVO_COMPROBANTE'],
+      { windowsHide: true, env: { ...process.env, ARCHIVO_COMPROBANTE: archivo } },
+      (error) => resolve(!error),
+    );
+  });
+}
+
+// Abre el chat en WhatsApp Desktop y, cuando su ventana queda al frente, aprieta Ctrl+V
+// para adjuntar el PDF que ya está en el portapapeles. Enter lo aprieta siempre el usuario.
+const SCRIPT_PEGAR = `
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -Namespace Pachi -Name Ventana -MemberDefinition @'
+[DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+[DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr ventana, out uint proceso);
+'@
+function WhatsappAlFrente {
+  $proceso = 0
+  [void][Pachi.Ventana]::GetWindowThreadProcessId([Pachi.Ventana]::GetForegroundWindow(), [ref]$proceso)
+  (Get-Process -Id $proceso -ErrorAction SilentlyContinue).ProcessName -like 'WhatsApp*'
+}
+$limite = (Get-Date).AddSeconds(15)
+while ((Get-Date) -lt $limite) {
+  if (WhatsappAlFrente) {
+    # Tiempo para que cargue el chat; si mientras tanto se cambió de ventana, no se pega nada.
+    Start-Sleep -Milliseconds 1800
+    if (WhatsappAlFrente) { [System.Windows.Forms.SendKeys]::SendWait('^v'); 'pegado' } else { 'no-pegado' }
+    exit
+  }
+  Start-Sleep -Milliseconds 300
+}
+'no-pegado'
+`;
+
+function pegarEnWhatsapp() {
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(SCRIPT_PEGAR, 'utf16le').toString('base64')],
+      { windowsHide: true, timeout: 25000 },
+      (error, salida) => resolve(!error && String(salida).trim() === 'pegado'),
+    );
+  });
+}
+
+ipcMain.handle('comprobante:abrirWhatsapp', async (_evento, telefono, mensaje) => {
+  const numero = String(telefono).replace(/\D/g, '');
+  // Sin número o sin WhatsApp Desktop no se pega nada solo: queda el Ctrl+V manual.
+  if (!numero || !app.getApplicationNameForProtocol('whatsapp://')) return 'sin-app';
+  await shell.openExternal(`whatsapp://send?phone=${numero}&text=${encodeURIComponent(String(mensaje))}`);
+  return (await pegarEnWhatsapp()) ? 'pegado' : 'no-pegado';
+});
+
+// Comprobantes en PDF: se guardan en Documentos/Pachi Motosport/Comprobantes.
+// Solo se usa el nombre del archivo, así nunca se escribe fuera de esa carpeta.
+ipcMain.handle('comprobante:guardar', async (_evento, nombre, datos, accion) => {
+  const carpeta = path.join(app.getPath('documents'), 'Pachi Motosport', 'Comprobantes');
+  await fs.promises.mkdir(carpeta, { recursive: true });
+  const archivo = path.join(carpeta, path.basename(String(nombre)));
+  await fs.promises.writeFile(archivo, Buffer.from(datos));
+
+  if (accion === 'whatsapp') {
+    if (await copiarAlPortapapeles(archivo)) return 'portapapeles';
+    // Si no se pudo copiar, queda el método de antes: abrir la carpeta para arrastrarlo.
+    shell.showItemInFolder(archivo);
+    return 'carpeta';
+  }
+  await shell.openPath(archivo);
+  return 'abierto';
+});
 
 // Actualizaciones desde GitHub Releases: se descargan solas en segundo plano.
 // Si el usuario no toca "Reiniciar y actualizar", se instalan al cerrar la app.

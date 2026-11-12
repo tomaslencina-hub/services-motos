@@ -22,37 +22,68 @@
         </label>
       </div>
 
-      <label class="campo">
-        <span>Trabajos realizados *</span>
-        <textarea formControlName="trabajos" rows="5" placeholder="Un trabajo por línea"></textarea>
-        @if (invalido('trabajos')) {
-          <small class="error">Describí qué se le hizo a la moto.</small>
+      <div class="items" formArrayName="items">
+        <div class="items-titulo">
+          <h2>Trabajos</h2>
+          <span class="sutil">Mano de obra</span>
+        </div>
+        @if (indices('trabajo').length) {
+          <div class="item item-encabezado" aria-hidden="true">
+            <span>Descripción</span><span>Cant.</span><span>Precio unit.</span><span>Subtotal</span><span></span>
+          </div>
         }
-      </label>
+        @for (i of indices('trabajo'); track items.at(i)) {
+          <div class="item" [formGroupName]="i">
+            <input formControlName="descripcion" class="item-descripcion" placeholder="Ej: Cambio de aceite" aria-label="Descripción" />
+            <input type="number" formControlName="cantidad" min="0" step="1" class="item-cantidad" aria-label="Cantidad" />
+            <input type="number" formControlName="precioUnitario" min="0" class="item-precio" placeholder="$" aria-label="Precio unitario" />
+            <strong class="item-subtotal">{{ subtotal(i) | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
+            <button type="button" class="item-quitar" title="Quitar" (click)="quitarItem(i)">✕</button>
+          </div>
+        }
+        <div class="items-pie">
+          <button type="button" class="btn btn-chico" (click)="agregarItem('trabajo')">+ Agregar trabajo</button>
+          <span class="sutil">Subtotal: <strong>{{ totalTrabajos() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong></span>
+        </div>
+      </div>
       <div class="chips chips-trabajos">
         @for (t of trabajosFrecuentes; track t) {
           <button type="button" class="chip" (click)="agregarTrabajo(t)">+ {{ t }}</button>
         }
       </div>
 
-      <label class="campo">
-        <span>Repuestos usados</span>
-        <textarea formControlName="repuestos" rows="3" placeholder="Ej: Aceite Motul 10W40 1L, filtro de aceite…"></textarea>
-      </label>
-
-      <div class="fila">
-        <label class="campo">
-          <span>Mano de obra ($)</span>
-          <input type="number" formControlName="manoDeObra" min="0" />
-        </label>
-        <label class="campo">
-          <span>Repuestos ($)</span>
-          <input type="number" formControlName="costoRepuestos" min="0" />
-        </label>
-        <div class="campo total">
-          <span>Total</span>
-          <strong>{{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
+      <div class="items" formArrayName="items">
+        <div class="items-titulo">
+          <h2>Repuestos</h2>
+          <span class="sutil">Lo que se le puso a la moto</span>
         </div>
+        @if (indices('repuesto').length) {
+          <div class="item item-encabezado" aria-hidden="true">
+            <span>Descripción</span><span>Cant.</span><span>Precio unit.</span><span>Subtotal</span><span></span>
+          </div>
+        }
+        @for (i of indices('repuesto'); track items.at(i)) {
+          <div class="item" [formGroupName]="i">
+            <input formControlName="descripcion" class="item-descripcion" placeholder="Ej: Aceite Motul 10W40 1L" aria-label="Descripción" />
+            <input type="number" formControlName="cantidad" min="0" step="1" class="item-cantidad" aria-label="Cantidad" />
+            <input type="number" formControlName="precioUnitario" min="0" class="item-precio" placeholder="$" aria-label="Precio unitario" />
+            <strong class="item-subtotal">{{ subtotal(i) | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
+            <button type="button" class="item-quitar" title="Quitar" (click)="quitarItem(i)">✕</button>
+          </div>
+        }
+        <div class="items-pie">
+          <button type="button" class="btn btn-chico" (click)="agregarItem('repuesto')">+ Agregar repuesto</button>
+          <span class="sutil">Subtotal: <strong>{{ totalRepuestos() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong></span>
+        </div>
+      </div>
+
+      @if (sinDetalle()) {
+        <div class="aviso aviso-error">Cargá al menos un trabajo o repuesto.</div>
+      }
+
+      <div class="total-service">
+        <span>Total</span>
+        <strong>{{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong>
       </div>
 
       <label class="campo">
