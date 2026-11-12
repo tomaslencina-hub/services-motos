@@ -43,8 +43,13 @@ jobs:
 
       - run: npx ng build
 
-      # electron-builder sube todo a un borrador: si publicara directo, las subidas en paralelo
-      # (instalador y .blockmap) chocan al crear la versión en GitHub.
+      # El borrador se crea antes: electron-builder sube el instalador y el .blockmap en paralelo
+      # y, si no existe, cada subida crea su propia versión y los archivos quedan repartidos.
+      - name: Crear borrador de la versión
+        run: gh release create "v$env:VERSION" --draft --title "$env:VERSION" --notes "Versión de prueba generada desde dev." --target "$env:GITHUB_SHA"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
