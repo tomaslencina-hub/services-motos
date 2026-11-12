@@ -8,7 +8,9 @@ const { autoUpdater } = require('electron-updater');
 
 const MODO_DEV = process.argv.includes('--dev');
 const DIST = path.join(__dirname, '..', 'dist', 'services-motos', 'browser');
-const CADA_4_HORAS = 4 * 60 * 60 * 1000;
+// Las versiones de prueba (1.0.1-dev.7) buscan actualizaciones cada 10 minutos; las del taller, cada 4 horas.
+const ES_VERSION_DE_PRUEBA = app.getVersion().includes('-dev.');
+const CADA_CUANTO_BUSCAR = ES_VERSION_DE_PRUEBA ? 10 * 60 * 1000 : 4 * 60 * 60 * 1000;
 
 // Protocolo propio "app://" en lugar de file:// para que los módulos JS
 // y la base de datos local (IndexedDB) funcionen con un origen estable.
@@ -166,7 +168,7 @@ function buscarActualizaciones() {
   const buscar = () => autoUpdater.checkForUpdates().catch(() => {});
   buscar();
   // La app suele quedar abierta todo el día en el taller.
-  setInterval(buscar, CADA_4_HORAS);
+  setInterval(buscar, CADA_CUANTO_BUSCAR);
 }
 
 app.whenReady().then(() => {

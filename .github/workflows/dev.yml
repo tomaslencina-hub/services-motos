@@ -1,0 +1,48 @@
+# Cada push a dev genera el instalador y lo publica como versión de prueba (pre-release).
+# Las apps de producción no ven las pre-release; las instaladas desde dev se actualizan solas.
+name: Versión de prueba (dev)
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: version-dev
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Ej: package.json 1.0.0 -> 1.0.1-dev.7 (el 7 es el número de ejecución). No se commitea.
+      # Se publica como pre-release para que la app del taller no la tome.
+      - name: Marcar como versión de prueba
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = require('./package.json');
+            const [a, b, c] = p.version.split('-')[0].split('.').map(Number);
+            p.version = a + '.' + b + '.' + (c + 1) + '-dev.${{ github.run_number }}';
+            p.build.publish[0].releaseType = 'prerelease';
+            fs.writeFileSync('package.json', JSON.stringify(p, null, 2));
+            console.log('Versión de prueba:', p.version);
+          "
+
+      - run: npx ng build
+
+      - run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
